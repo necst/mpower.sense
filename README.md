@@ -1,4 +1,4 @@
 mpower.sense
 ============
 
-MPower sense library
+MPower Sense libraries.
