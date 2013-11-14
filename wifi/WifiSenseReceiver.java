@@ -3,15 +3,19 @@ package org.morphone.sense.wifi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.NetworkInfo;
 import android.net.NetworkInfo.DetailedState;
 import android.net.TrafficStats;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.util.Log;
 
 public class WifiSenseReceiver extends BroadcastReceiver  
 									implements WifiSenseInterface {
+	
+	private static final String TAG = "WifiSenseReceiver.java";
 	
 	private WifiManager wifiManager;
 	WifiInfo wifiInfo;
@@ -21,41 +25,59 @@ public class WifiSenseReceiver extends BroadcastReceiver
 	private long rxBytes = -1;
 	private long txBytes = -1;
 	
-	private String macAddress;
+	private String macAddress = null;
 	
 	
 	public WifiSenseReceiver(Context context){
 		this.wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 		
 		try{
-			if(wifiManager.isWifiEnabled()){
-				
-				// Init boolean variables 
-				isEnabled = 1;
-				
-				wifiInfo = wifiManager.getConnectionInfo();
-				SupplicantState supplicantState = wifiInfo.getSupplicantState();
-				if(supplicantState.toString().compareTo("COMPLETED")==0 || 
-						supplicantState.toString().compareTo("ASSOCIATED")==0 ||
-						supplicantState.toString().compareTo("INACTIVE")==0)
-					isConnected = 1;
-				else
-					isConnected = 0;
-				
-				 // WiFi already enabled: get MAC address
-			    macAddress = wifiInfo.getMacAddress().replace(":", "");
+			// Look for MAC address stored in SharedPreferences
+			SharedPreferences pref = context.getSharedPreferences("senseLibraries", 0);
+			macAddress = pref.getString("macAddress", null);
+			
+			// MAC address never sensed: try to get it
+			if(macAddress != null){
+				Log.d(TAG, "MAC address found in SharedPreferences: '" + macAddress + "'");
 			}else{
-				isEnabled = 0;
-				isConnected = 0;
 				
-				// NOTE: It's not possible to get the WiFi MAC Address if the WiFi module is off.
-				// Enable it and grab MAC address
-			    wifiManager.setWifiEnabled(true);
-			    wifiInfo = wifiManager.getConnectionInfo();
-			    macAddress = wifiInfo.getMacAddress().replace(":", "");
+				Log.d(TAG, "MAC address NOT found in SharedPreferences");
+				
+				if(wifiManager.isWifiEnabled()){
+					// Init boolean variables 
+					isEnabled = 1;
+					
+					wifiInfo = wifiManager.getConnectionInfo();
+					SupplicantState supplicantState = wifiInfo.getSupplicantState();
+					if(supplicantState.toString().compareTo("COMPLETED")==0 || 
+							supplicantState.toString().compareTo("ASSOCIATED")==0 ||
+							supplicantState.toString().compareTo("INACTIVE")==0)
+						isConnected = 1;
+					else
+						isConnected = 0;
+					
+					 // WiFi already enabled: get MAC address
+				    macAddress = wifiInfo.getMacAddress().replace(":", "");
+				}else{
+					isEnabled = 0;
+					isConnected = 0;
+					
+					// NOTE: It's not possible to get the WiFi MAC Address if the WiFi module is off.
+					// Enable it and grab MAC address
+				    wifiManager.setWifiEnabled(true);
+				    wifiInfo = wifiManager.getConnectionInfo();
+				    macAddress = wifiInfo.getMacAddress().replace(":", "");
 
-			    // Disable WiFI again
-			    wifiManager.setWifiEnabled(false);
+				    // Disable WiFI again
+				    wifiManager.setWifiEnabled(false);
+				}
+				
+				// Store the MAC address in SharedPreferences
+		    	SharedPreferences.Editor editor = pref.edit();
+		        editor.putString("macAddress", macAddress);
+		        editor.commit();
+		        
+				Log.d(TAG, "MAC address now stored in SharedPreferences: '" + macAddress + "'");
 			}
 		}catch(Exception e){
 			isEnabled = -1;
