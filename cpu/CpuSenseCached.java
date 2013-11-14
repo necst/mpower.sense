@@ -10,8 +10,18 @@ import java.util.regex.Pattern;
 
 import android.util.Log;
 
-public class CpuSense implements CpuSenseInterface {
-	
+
+/**
+ * This implementation is meant to cache the static information retrieved, 
+ * throwing exceptions if cpu files are not found.
+ * 
+ * NOTE: on some devices (e.g.: LG Nexus 4), this behavior is wrong, since
+ * cpu files are created/removed as soon as cores are turned on/off.
+ * This is the reason why a new "polling" implementation has been developed.
+ *
+ */
+public class CpuSenseCached implements CpuSenseInterface {
+		
 	final String TAG = "org.morphone.sense";
 	
 	private Integer cpu_number = 0;					// Number of CPUs on the device
@@ -46,7 +56,7 @@ public class CpuSense implements CpuSenseInterface {
         }      
     }
     
-    public CpuSense(){
+    public CpuSenseCached(){
     	
     	try {
     		File dir = new File(CPU_DIRECTORY);					// Get dir
