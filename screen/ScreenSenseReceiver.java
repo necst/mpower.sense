@@ -38,7 +38,7 @@ public class ScreenSenseReceiver extends BroadcastReceiver
 	private String brightness_path = null;
 	private boolean brightness_file_found = false;
 
-	// Add here file patterns for future smartphone models
+	// TODO: Add here file patterns for future smartphone models
 	private final BrightnessFilePattern[] known_brightness_paths = {
 			new SamsungAndLGFilePattern(),
 			new CyanogenFilePattern()
