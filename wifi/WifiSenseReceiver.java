@@ -29,9 +29,26 @@ public class WifiSenseReceiver extends BroadcastReceiver
 	
 	
 	public WifiSenseReceiver(Context context){
-		this.wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 		
 		try{
+			// Init boolean variables 
+			this.wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+			if(wifiManager.isWifiEnabled()){
+				isEnabled = 1;
+				
+				wifiInfo = wifiManager.getConnectionInfo();
+				SupplicantState supplicantState = wifiInfo.getSupplicantState();
+				if(supplicantState.toString().compareTo("COMPLETED")==0 || 
+						supplicantState.toString().compareTo("ASSOCIATED")==0 ||
+						supplicantState.toString().compareTo("INACTIVE")==0)
+					isConnected = 1;
+				else
+					isConnected = 0;
+			}else{
+				isEnabled = 0;
+				isConnected = 0;
+			}
+			
 			// Look for MAC address stored in SharedPreferences
 			SharedPreferences pref = context.getSharedPreferences("senseLibraries", 0);
 			macAddress = pref.getString("macAddress", null);
@@ -40,28 +57,12 @@ public class WifiSenseReceiver extends BroadcastReceiver
 			if(macAddress != null){
 				Log.d(TAG, "MAC address found in SharedPreferences: '" + macAddress + "'");
 			}else{
-				
 				Log.d(TAG, "MAC address NOT found in SharedPreferences");
 				
-				if(wifiManager.isWifiEnabled()){
-					// Init boolean variables 
-					isEnabled = 1;
-					
-					wifiInfo = wifiManager.getConnectionInfo();
-					SupplicantState supplicantState = wifiInfo.getSupplicantState();
-					if(supplicantState.toString().compareTo("COMPLETED")==0 || 
-							supplicantState.toString().compareTo("ASSOCIATED")==0 ||
-							supplicantState.toString().compareTo("INACTIVE")==0)
-						isConnected = 1;
-					else
-						isConnected = 0;
-					
+				if(isEnabled == 1){
 					 // WiFi already enabled: get MAC address
 				    macAddress = wifiInfo.getMacAddress().replace(":", "");
-				}else{
-					isEnabled = 0;
-					isConnected = 0;
-					
+				}else{					
 					// NOTE: It's not possible to get the WiFi MAC Address if the WiFi module is off.
 					// Enable it and grab MAC address
 				    wifiManager.setWifiEnabled(true);
