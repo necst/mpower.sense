@@ -18,7 +18,17 @@ public class AppsSense implements AppsSenseInterface {
 	}
 	
 	@Override
+	public String getCurrentApp() throws AppsSenseException {
+		return getForegroundApps(1).get(0);
+	}
+	
+	@Override
 	public List<String> getForegroundApps() throws AppsSenseException {
+		return getForegroundApps(Integer.MAX_VALUE);
+	}
+	
+	@Override
+	public List<String> getForegroundApps(int maxNumber) throws AppsSenseException {
 		if(activityManager == null)
 			throw new AppsSenseException("Library not initialized");
 		try{
@@ -27,15 +37,22 @@ public class AppsSense implements AppsSenseInterface {
 			 * it simply means that the user has gone to it and never closed it, 
 			 * but currently the system may have killed its process and is only holding on to its last state 
 			 * in order to restart it when the user returns.*/
-			List<ActivityManager.RunningTaskInfo> runningTasks = activityManager.getRunningTasks(Integer.MAX_VALUE);
+			List<ActivityManager.RunningTaskInfo> runningTasks = activityManager.getRunningTasks(maxNumber);
 			List<String> runningTasksNames = new LinkedList<String>();
-			for (int i = 0; i < runningTasks.size(); i++)
-				runningTasksNames.add(runningTasks.get(i).baseActivity.toShortString());
+			for (int i = 0; i < runningTasks.size(); i++){
+				String appName = runningTasks.get(i).baseActivity.toShortString().split("/")[1];	// Keep only the activity path
+				appName = appName.substring(0, appName.length()-1);									// drop the last "}"
+				runningTasksNames.add(appName);
+			}
 			return runningTasksNames;
 		}catch(Exception e){
 			throw new AppsSenseException("Error while retrieving running tasks: " + e.getMessage());
 		}
 	}
+	
+	
+	
+	
 	
 	// Method used to check which information are available
 	public void printAvailableInformation(){

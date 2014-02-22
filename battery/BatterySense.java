@@ -116,7 +116,7 @@ public class BatterySense extends BroadcastReceiver
         			(status==BatteryManager.BATTERY_STATUS_DISCHARGING || 
         			status==BatteryManager.BATTERY_STATUS_NOT_CHARGING) 
         			&& percentage==100){
-        		Intent i = new Intent("message");  
+        		Intent i = new Intent("mpower_event");  
     			i.putExtra("type", "msg_battery_full");
     			context.sendBroadcast(i);
         	 }
@@ -127,7 +127,7 @@ public class BatterySense extends BroadcastReceiver
         		&& charge_on_prev!=BatteryManager.BATTERY_PLUGGED_AC && charge_on_prev!=BatteryManager.BATTERY_PLUGGED_USB)
         {
          
-        	Intent i = new Intent("message");  
+        	Intent i = new Intent("mpower_event");  
 			i.putExtra("type", "msg_plugged_on");
 			context.sendBroadcast(i);
         }
